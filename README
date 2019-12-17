@@ -1,99 +1,14 @@
-Для того чтобы начать пользоваться программой mjj регрессии необходимо:
 
-0. Иметь установленный python 2.7
+To start using mjj regression code
 
-1. Установить virtualenv и создать новое окружение:
-	mkvirtualenv --system-site-packages mjj_env
-Затем войти в него:
+0. Install python3 
+   Install ROOT with support of python 3
+
+1. Make virtualenv that uses python3 and includes system python packages:
+	mkvirtualenv --system-site-packages -p /usr/bin/python3 mjj_env
+Enter the enviroment:
 	workon mjj_env
-и поставить необходимые модули командой:
-	pip install -r requirements.txt 
-В файле requirements.txt можно посмотреть дополнительные модули и их версии
-
-2. Распаковать архив в отдельную директорию. 
-В находится папка dataset, где хранятся root-файлы с деревьями и модель XGBoost регрессора, а так же два скрипта:
-	preprocess_dataset.py: используется для подготовки деревьев и создания в них необходимых бранчей
-	MjjReg.py:		непосредственно скрипт, который выполняет регрессию. 
-	MjjRegLib.py:	библиотека, где лежат функции, необходимые для формирования выходного файла регрессии и построения гистограмм. 
-	MjjRegConf.py:	библиотека с функциями для настойки входных переменных и параметров регрессора
-	MjjRegTrain.py:	скрипт, который выполняет только тренировку. 
-	MjjRegTest.py:	скрипт, который выполняет только тестирование. 
-3. Поместить root-файлы исходных деревьев в папку dataset.
-
-4. Открыть preprocess_dataset.py, найти сточки 139 и 142 и удостовериться, что имена файлов совпадают с деревьями, используемыми в регрессии. Иначе поправить строчки. ТУТ МОЖНО ПРОПИСЫВАТЬ АБСОЛЮТНЫЙ ПУТЬ КО ВХОДНЫМ ДАННЫМ. Больше нигде ничего менять не нужно, только тут! 
-
-5. Запустить скрипт сначала с тэгом train затем с тэгом test. Если всё начнёт работать, то в терминал посыпятся строчки вида: 
-	event 13803	 N_nu = 1	dR11 = 0.01696	dR22 = 0.00000
-По завершении программа должна выдать что-то вроде: 
-	Prepared 13806 events with <HHbbggMVA>0.29 && reg_reco_mjj < 200> cut
-После этого в папке dataset должны появиться два root-файла:
-	Train_tree.root	
-	Test_tree.root
-6. Теперь запускаем MjjReg.py сначала с тэгом train. Если всё заработало, то в терминал сыпятся строчки вида:
-	[5]	validation_0-mae:0.387908	validation_1-mae:0.412013
-В конце программа выводит данные регрессора вот так: 
-	***Feature importance***
-	reg_recoJet_2_mass  	0.17650
-	reg_recoJet_2_pt    	0.08733
-	reg_recoJet_1_pt    	0.06109
-	reg_recoJet_1_DeepCSV	0.06106
-	reg_recoJet_1_mass  	0.06022
-	Met_CorPt           	0.05718
-	reg_recoJet_phi1M   	0.05664
-	nvtx                	0.04846
-	rho                 	0.04664
-	reg_recoJet_1_eta   	0.04441
-	reg_recoJet_2_e     	0.04388
-	reg_recoJet_phi2M   	0.04051
-	reg_recoJet_2_eta   	0.03931
-	reg_recoJet_1_e     	0.03882
-	Met_CorPhi          	0.03860
-	reg_recoJet_2_DeepCSV	0.03549
-	reg_recoJet_phi12   	0.03236
-	reg_reco_Mbbgg      	0.03151
-
-	***Booster parameters***
-	reg_alpha           0         
-	n_jobs              8         
-	silent              False     
-	colsample_bylevel   1         
-	scale_pos_weight    1         
-	verbosity           1         
-	learning_rate       0.05      
-	min_child_weight    1         
-	max_delta_step      0         
-	nthread             None      
-	base_score          0.5       
-	n_estimators        100       
-	subsample           1         
-	reg_lambda          1         
-	random_state        0         
-	gamma               1         
-	objective           reg:linear
-	max_depth           15        
-	importance_type     gain      
-	booster             gbtree  
-Также она строит график зависимости скоринга от номера эпохи. Ошибка должна уменьшаться со увеличением номера эпохи. Если его закрыть, то скрипт завершится автоматически строчкой:
-	Training successfully compleated! 
-
-7. Ещё раз запускаем MjjReg.py теперь с тэгом test. Теперь он тихо сделает свою работу, выведет строчки: 
-	Output tree size: 67906
-	Testing successfully compleated!
-А потом начнет строить гистограммы распределений до и после регрессии.
-Обратите внимание на последнюю строку в терминале. Она имеет следующий вид: 
-	sigma2mean impr.: 7.69%	sigma impr.: 7.96%
-По ней, А также по гистограммам можно контролировать то, что регрессор работает: Синий пик должен быть выше и Уже красного, а значения должны быть неотрицательны. 
-
-8. В конце программы формируется файл Reg_out.root. Он имеет все бранчи, которые содержатся во выходном файле у ETH. Дополнительно в него добавлены бранчи: 
-	reg_recoJet_phi12 - разница углов джетов
-	reg_recoJet_phi1M - угол между первым джетом и MET_CorPhi
-	reg_recoJet_phi2M - угол между вторым джетом и MET_CorPhi
-	reg_recoJet_NNu	  - наличие нейтрино в джетах ( 0 - нет, 1 в одном из джетов, 2 - в обоих джетах)
-	reg_reg_reco_mjj <- Это значение массы диджета после применения регрессии. В дальнейшем анализе используйте эту переменную.
-
-ЕСЛИ НЕОБХОДИМО ИСПОЛЬЗОВАТЬ ОТДЕЛЬНО СКРИПТЫ ДЛЯ ТРЕНИРОВКИ И ТЕСТА: 
-7*. Сначала запускаем MjjRegTrain.py без каких-либо ключей
-	Затем запускаем MjjRegTest.py тоже без ключей. 
-	Результат идентичен использованию скрипта MjjReg.py
-
+and install all required modules py typing:
+	pip3 install -r requirements.txt 
+requirements.txt contains all modules required for mjj regression code and their minimum versions.
 

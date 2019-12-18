@@ -13,8 +13,9 @@ and install all required modules py typing:
 requirements.txt contains all modules required for mjj regression code and their minimum versions.
 
 After preparing python enviroment to run the regression you need to edit MjjRegTest.py 
-1. Add the information about the input and output folder: it is required to have same directory for all input. 
+1. Add the information about the input folder: it is required to have same directory for all input. 
 At this directory there should be three folder for each year (2016, 2017, 2018)
-2. Edit input file structure: add path to the interested tree and its name. 
+2. Configure output directory in the same way as the input.
+3. Edit input file structure: add path to the interested tree and its name. 
 To run the regression type: python3 MjjRegTest.py <filename> <year>
 
